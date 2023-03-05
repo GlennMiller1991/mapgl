@@ -11,9 +11,9 @@ export const AllRow: React.FC<tAllRow> = React.memo(({
                                                      }) => {
     return (
         <div className={rowStyles.row + ' ' + styles.allRow}>
-            <div className={'btn'}
+            <div className={'flexCenter btn'}
                  onClick={onDeleteAll}>Удалить все</div>
-            <div  className={'btn'}
+            <div  className={'flexCenter btn'}
                   onClick={onChangeVisibilityAll}>видимость</div>
         </div>
     )
