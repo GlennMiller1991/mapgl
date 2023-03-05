@@ -119,6 +119,13 @@ function App() {
             }
         }
     }, [])
+
+    /**
+     * Карта убрана в отдельную компоненту, куда передается только функция
+     * дальнейших действий. Это она
+     * @param map {mapboxgl.Map}
+     * Добавляем необходимые уровни, источники, обработчики
+     */
     const onMapMount = useCallback((map: mapboxgl.Map) => {
         map.addSource(pointSourceName, pointSource as GeoJSONSourceRaw)
         map.addLayer(pointConfig)
@@ -142,9 +149,18 @@ function App() {
                 ...prev
             }})
     }, [])
+
+    /**
+     * Фуекция удаления объекта
+     * @param element {tPoint | tLine} линия или точка, типы схожи
+     */
     const onDelete = useCallback((element: tPoint | tLine) => {
         setState(prev => {
+            // если попап висит, то закрываем. Так как может остаться после удаления
+            // Дальше обнуляем
             prev.popup && prev.popup.remove()
+
+            // массив филтруем по айди
             return {
                 ...prev,
                 popup: null,
@@ -154,6 +170,11 @@ function App() {
             }
         })
     }, [])
+
+    /**
+     * Фуекция смены видимости одного объекта
+     * @param element {tPoint | tLine} линия или точка, типы схожи
+     */
     const onChangeVisibility = useCallback((element: tPoint | tLine) => {
         setState(prev => {
             prev.popup && prev.popup.remove()
@@ -172,13 +193,25 @@ function App() {
             }
         })
     }, [])
+
+    /**
+     * Перейти к объекту
+     * @param element {tPoint | tLine} линия или точка, типы схожи
+     */
     const onGoTo = useCallback((element: tPoint | tLine) => {
         map.current?.flyTo({center: element.type === 'point' ?
                 (element as tPoint).coords :
                 (element as tLine).coords[0]
         })
     }, [])
+
+    /**
+     * Удалить все объекты данного типа
+     * @param type {tStateArrays} вкладка, по которой кликнули, она же наименвание массива
+     */
     const onDeleteAll = useCallback((type: tStateArrays) => {
+        // выходим из любого режима создания объекта
+        // иначе червато ошибкой доступа по несуществующему индексу
         mode.current = 'none'
         setState(prev => {
             prev.popup && prev.popup.remove()
@@ -189,7 +222,15 @@ function App() {
             }
         })
     }, [])
+
+    /**
+     * Сменить видимость всех объектов данного типа на отличную от видимости первого элемента
+     * данного типа
+     * @param type {tStateArrays} вкладка, по которой кликнули, она же наименвание массива
+     */
     const onChangeVisibilityAll = useCallback((type: tStateArrays) => {
+        // выходим из режима создания, так как пользователь может сменить видимость линии
+        // которую сейчас и создает
         mode.current = 'none'
         setState(prev => {
             prev.popup && prev.popup.remove()
