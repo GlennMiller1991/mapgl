@@ -1,0 +1,17 @@
+.table {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 30%;
+    display: grid;
+    grid-template-rows: 2rem 1fr;
+    max-height: 30%;
+    background: gray;
+    border: 1px solid white;
+}
+
+.body {
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
+}

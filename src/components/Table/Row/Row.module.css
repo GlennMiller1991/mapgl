@@ -1,0 +1,19 @@
+.row {
+    min-height: 2rem;
+    max-height: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 2rem 2rem 2rem;
+}
+
+.row > div {
+    border: 1px solid white;
+}
+
+.row > div:first-child {
+    border: 1px solid white;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    justify-content: unset;
+    padding-left: 0.5rem;
+    overflow: hidden;
+}

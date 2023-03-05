@@ -1,5 +1,5 @@
-import {LineLayer} from "mapbox-gl";
-import {tLineFeature} from "../types/types";
+import {AnyLayer, LineLayer} from "mapbox-gl";
+import {tLineFeature, tPointFeature} from "../types/types";
 
 export const lineConfig: LineLayer = {
     'id': 'lines',
@@ -11,7 +11,25 @@ export const lineConfig: LineLayer = {
     },
     'paint': {
         'line-color': '#888',
-        'line-width': 10
+        'line-width': 10,
+    }
+}
+
+export const linePointConfig: AnyLayer = {
+    id: 'linePoints',
+    type: 'circle',
+    source: 'linePointSource',
+    paint: {
+        "circle-radius": 10,
+        'circle-color': '#888',
+    }
+}
+
+export const linePointSource = {
+    type: 'geojson',
+    data: {
+        type: 'FeatureCollection',
+        features: [] as tPointFeature[]
     }
 }
 
@@ -26,3 +44,4 @@ export const lineSource = {
 
 
 export const lineSourceName: string = 'lineSource'
+export const linePointSourceName: string = 'linePointSource'

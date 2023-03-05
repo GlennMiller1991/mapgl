@@ -1,4 +1,4 @@
-import {AnyLayer, AnySourceData, GeoJSONSource, GeoJSONSourceRaw} from "mapbox-gl";
+import {AnyLayer} from "mapbox-gl";
 import {tPointFeature} from "../types/types";
 
 export const pointConfig: AnyLayer = {
@@ -11,6 +11,7 @@ export const pointConfig: AnyLayer = {
     }
 }
 
+
 export const pointSource = {
     type: 'geojson',
     data: {
@@ -18,15 +19,5 @@ export const pointSource = {
         features: [] as tPointFeature[]
     }
 }
-
-export const pointTemplate: tPointFeature = {
-    type: 'Feature',
-    properties: {},
-    geometry: {
-        type: 'Point',
-        coordinates: []
-    }
-}
-
 
 export const pointSourceName: string = 'pointSource'

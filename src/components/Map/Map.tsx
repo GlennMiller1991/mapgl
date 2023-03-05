@@ -25,6 +25,6 @@ export const Map: React.FC<tMap> = React.memo(({onMount}) => {
         }
     }, [])
     return (
-        <div className={'mapContainer'} ref={mapContainer}/>
+        <div className={'allContainer'} ref={mapContainer}/>
     )
 })
