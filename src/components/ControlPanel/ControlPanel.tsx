@@ -9,7 +9,6 @@ export const ControlPanel: React.FC<tControlPanel> = React.memo(({
                                                                  }) => {
     return (
         <div className={'controlPanel'}>
-            <div>
                 {
                     mode === 'point' &&
                     <>
@@ -32,7 +31,6 @@ export const ControlPanel: React.FC<tControlPanel> = React.memo(({
                         </p>
                     </>
                 }
-            </div>
         </div>
     )
 })

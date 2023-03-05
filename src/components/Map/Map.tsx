@@ -19,10 +19,12 @@ export const Map: React.FC<tMap> = React.memo(({onMount}) => {
                 accessToken,
                 style: 'mapbox://styles/mapbox/streets-v12',
             })
-            onMount && onMount(map)
+            map.on('load', () => {
+                onMount(map)
+            })
         }
     }, [])
     return (
-        <div className={'mapContainer allScreen'} ref={mapContainer}/>
+        <div className={'mapContainer'} ref={mapContainer}/>
     )
 })
