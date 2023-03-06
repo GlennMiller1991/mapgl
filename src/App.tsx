@@ -1,9 +1,9 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import mapboxgl, {EventData, GeoJSONSource, GeoJSONSourceRaw, MapboxEvent, MapboxGeoJSONFeature} from "mapbox-gl";
-import {tLine, tMode, tPoint, tState, tStateArrays} from "./types/types";
-import {initialState} from "./constants/initialState";
+import mapboxgl, {EventData, GeoJSONSource, GeoJSONSourceRaw, MapboxGeoJSONFeature} from 'mapbox-gl';
+import {tLine, tMode, tPoint, tState, tStateArrays} from './types/types';
+import {initialState} from './constants/initialState';
 import {Map} from './components/Map/Map'
-import {pointConfig, pointSource, pointSourceName} from "./constants/pointConfig";
+import {pointConfig, pointSource, pointSourceName} from './constants/pointConfig';
 import {
     lineConfig,
     linePointConfig,
@@ -11,18 +11,17 @@ import {
     linePointSourceName,
     lineSource,
     lineSourceName
-} from "./constants/lineConfig";
-import {Preloader} from "./components/Preloader/Preloader";
-import {Table} from "./components/Table/Table";
-import {getIdByDate} from "./utils/getIdByDate";
-import {BtnContainer} from "./components/BtnContainer/BtnContainer";
+} from './constants/lineConfig';
+import {Preloader} from './components/Preloader/Preloader';
+import {Table} from './components/Table/Table';
+import {getIdByDate} from './utils/getIdByDate';
+import {BtnContainer} from './components/BtnContainer/BtnContainer';
 
 function App() {
     const mode = useRef<tMode>('none')
     const map = useRef<mapboxgl.Map | null>(null)
     const [state, setState] = useState<tState>({
         map,
-        currentPosition: initialState.coords,
         mode,
         points: [],
         lines: [],
@@ -30,70 +29,100 @@ function App() {
         popup: null,
     })
 
-
-    const onMapMove = useCallback((e: MapboxEvent  & EventData) => {
-        let coords = e.target.getCenter()
-        let zoom = e.target.getZoom()
-        setState(prev => ({...prev, currentPosition: {
-            lat: coords.lat, lng: coords.lng, zoom: zoom
-            }}))
-    }, [])
+    /**
+     * Функция входа в режим создания линии
+     * Апдейтим мод и создаём шаблон линии
+     * Для отслеживания из другого места
+     */
     const onLineCreateClick = useCallback(() => {
-            setState(prev => {
-                prev.mode.current = 'line'
-                return {
-                    ...prev,
-                    unCompleteLine: {
-                        type: 'line',
-                        id: '',
-                        visible: true,
-                        coords: []
-                    }
+        setState(prev => {
+            prev.mode.current = 'line'
+            return {
+                ...prev,
+                unCompleteLine: {
+                    type: 'line',
+                    id: '',
+                    visible: true,
+                    coords: []
                 }
-            })
+            }
+        })
     }, [])
+
+    /**
+     * Функция выхода из всех режимов
+     */
     const onExitClick = useCallback(() => {
         setState(prev => {
             prev.mode.current = 'none'
             return {
-                ...prev
+                ...prev,
+                unCompleteLine: null
             }
         })
     }, [])
+
+    /**
+     * Функция входа в режим создания точки
+     */
     const onPointCreateClick = useCallback(() => {
         if (mode.current !== 'point') {
             setState(prev => {
                 prev.mode.current = 'point'
                 return {
-                    ...prev
+                    ...prev,
+                    unCompleteLine: null
                 }
             })
         }
     }, [])
-    const onMapClick = useCallback(( e:mapboxgl.MapMouseEvent & EventData) => {
+
+    /**
+     * Функция клика по карте
+     * @param e {mapboxgl.MapMouseEvent & EventData} - событие клика
+     */
+    const onMapClick = useCallback((e: mapboxgl.MapMouseEvent & EventData) => {
+        // Если карта есть и распространение события не сброшено
+        // (событие может сбрасываться по клику на объект)
         if (map.current && !e.defaultPrevented) {
+
+            // широта - долгота
             const latLng = new mapboxgl.LngLat(e.lngLat.lng, e.lngLat.lat)
+
+            // если режим создания точки
             if (mode.current === 'point') {
-                setState(prev => ({...prev, points: [...prev.points, {
-                    type: 'point',
-                        id: getIdByDate(),
-                        visible: true,
-                        coords: latLng,
-                    }]}))
-                mode.current = 'none'
+                // добавляем точку, в качестве айди - дата и время создания
+                setState(prev => {
+                    // сброс режима
+                    mode.current = 'none'
+                    return {
+                        ...prev, points: [...prev.points, {
+                            type: 'point',
+                            id: getIdByDate(),
+                            visible: true,
+                            coords: latLng,
+                        }]
+                    }
+                })
             } else if (mode.current === 'line') {
+                // Если режим создания линии
                 setState((prev) => {
+                    // Если подготовлен шаблон для линии
                     if (prev.unCompleteLine) {
+                        // То добавляем новую
+                        // А шаблон сбрасываем
                         return {
                             ...prev,
                             lines: [...prev.lines, {
                                 type: 'line',
                                 id: getIdByDate(),
                                 visible: true,
-                                coords: [[latLng.lng, latLng.lat]]}],
+                                coords: [[latLng.lng, latLng.lat]]
+                            }],
                             unCompleteLine: null
                         }
                     } else {
+                        // Иначе добавляем текущую координату к последней линии
                         const lines = [...prev.lines]
                         lines[lines.length - 1]
                             .coords
@@ -104,13 +133,26 @@ function App() {
             }
         }
     }, [])
-    const onElementClick = useCallback((e:mapboxgl.MapMouseEvent & EventData) => {
+
+    /**
+     * Функция клика по элементу
+     * @param e {mapboxgl.MapMouseEvent & EventData} - событие клика
+     */
+    const onElementClick = useCallback((e: mapboxgl.MapMouseEvent & EventData) => {
+        // Сброс распространения события
         e.preventDefault()
+
+        // Колобродим по внутреннему объекту, ища наш
         let obj = e.features && e.features[0]
         if (obj) {
-            const coordinates = obj.layer.id === 'lines' ? e.lngLat : (obj.geometry as unknown as {coordinates: mapboxgl.LngLat}).coordinates
+            // Если кликнули по линии
+            // То берём координату клика
+            // Иначе центр точки
+            const coordinates = obj.layer.id === 'lines' ? e.lngLat : (obj.geometry as unknown as { coordinates: mapboxgl.LngLat }).coordinates
             const id = obj.properties?.id
             if (coordinates && id) {
+                // Сетаем попап в стейт
+                // Чтобы сбросить при выполнении таких функций, как удаление
                 const popup = new mapboxgl.Popup({anchor: 'top'})
                     .setText(id)
                     .setLngLat(coordinates)
@@ -127,6 +169,7 @@ function App() {
      * Добавляем необходимые уровни, источники, обработчики
      */
     const onMapMount = useCallback((map: mapboxgl.Map) => {
+        // linePoints config
         map.addSource(pointSourceName, pointSource as GeoJSONSourceRaw)
         map.addLayer(pointConfig)
         map.on('click', pointConfig.id, onElementClick)
@@ -141,13 +184,13 @@ function App() {
         map.addLayer(linePointConfig)
         map.on('click', linePointConfig.id, onElementClick)
 
-        map.on('move', onMapMove)
         map.on('click', onMapClick)
         setState(prev => {
             prev.map.current = map
             return {
                 ...prev
-            }})
+            }
+        })
     }, [])
 
     /**
@@ -199,7 +242,8 @@ function App() {
      * @param element {tPoint | tLine} линия или точка, типы схожи
      */
     const onGoTo = useCallback((element: tPoint | tLine) => {
-        map.current?.flyTo({center: element.type === 'point' ?
+        map.current?.flyTo({
+            center: element.type === 'point' ?
                 (element as tPoint).coords :
                 (element as tLine).coords[0]
         })
@@ -248,17 +292,17 @@ function App() {
         if (state.map.current) {
             (state.map.current.getSource(pointSourceName) as GeoJSONSource)
                 .setData({
-                    "type": "FeatureCollection",
-                    "features": state.points.reduce((accum, point) => {
+                    'type': 'FeatureCollection',
+                    'features': state.points.reduce((accum, point) => {
                         if (point.visible) {
                             const feature = {
-                                "type": "Feature",
-                                "properties": {
-                                    "id": point.id
+                                'type': 'Feature',
+                                'properties': {
+                                    'id': point.id
                                 },
-                                "geometry": {
-                                    "type": "Point",
-                                    "coordinates": [point.coords.lng, point.coords.lat]
+                                'geometry': {
+                                    'type': 'Point',
+                                    'coordinates': [point.coords.lng, point.coords.lat]
                                 }
                             }
                             accum.push(feature as unknown as MapboxGeoJSONFeature)
@@ -267,28 +311,28 @@ function App() {
                     }, [] as Array<MapboxGeoJSONFeature>)
                 })
         }
-    },[state.points])
+    }, [state.points])
     useEffect(() => {
         if (state.map.current) {
             const [lineFeatures, pointFeatures] = state.lines.reduce((accum, line) => {
                 if (line.visible) {
                     if (line.coords.length > 1) {
                         const feature = {
-                            "type": "Feature",
-                            "properties": {id: line.id},
-                            "geometry": {
-                                "type": "LineString",
-                                "coordinates": line.coords
+                            'type': 'Feature',
+                            'properties': {id: line.id},
+                            'geometry': {
+                                'type': 'LineString',
+                                'coordinates': line.coords
                             }
                         }
                         accum[0].push(feature as unknown as MapboxGeoJSONFeature)
                     } else {
                         const feature = {
-                            "type": "Feature",
-                            "properties": {"id": line.id},
-                            "geometry": {
-                                "type": "Point",
-                                "coordinates": line.coords[0]
+                            'type': 'Feature',
+                            'properties': {'id': line.id},
+                            'geometry': {
+                                'type': 'Point',
+                                'coordinates': line.coords[0]
                             }
                         }
                         accum[1].push(feature as unknown as MapboxGeoJSONFeature)
@@ -299,45 +343,45 @@ function App() {
             if (state.map.current) {
                 (state.map.current.getSource(lineSourceName) as GeoJSONSource)
                     .setData({
-                        "type": "FeatureCollection",
-                        "features": lineFeatures,
+                        'type': 'FeatureCollection',
+                        'features': lineFeatures,
                     });
                 (state.map.current.getSource(linePointSourceName) as GeoJSONSource)
                     .setData({
-                        "type": "FeatureCollection",
-                        "features": pointFeatures,
+                        'type': 'FeatureCollection',
+                        'features': pointFeatures,
                     })
             }
         }
     }, [state.lines])
 
 
-  return (
-      <div className={'allContainer'}>
-          <Map onMount={onMapMount}/>
-          {
-              !state.map.current &&
-              <Preloader/>
-          }
-          {
-              state.map.current &&
-              <>
-                  <BtnContainer onLineCreateClick={onLineCreateClick}
-                                onPointCreateClick={onPointCreateClick}
-                                onExitClick={onExitClick}
-                                mode={mode.current}/>
-                  <Table lines={state.lines}
-                         points={state.points}
-                         onDeleteClick={onDelete}
-                         onDeleteAll={onDeleteAll}
-                        onChangeVisibility={onChangeVisibility}
-                         onChangeVisibilityAll={onChangeVisibilityAll}
-                        onGoTo={onGoTo}
-                  />
-              </>
-          }
-      </div>
-  );
+    return (
+        <div className={'allContainer'}>
+            <Map onMount={onMapMount}/>
+            {
+                !state.map.current &&
+                <Preloader/>
+            }
+            {
+                state.map.current &&
+                <>
+                    <BtnContainer onLineCreateClick={onLineCreateClick}
+                                  onPointCreateClick={onPointCreateClick}
+                                  onExitClick={onExitClick}
+                                  mode={mode.current}/>
+                    <Table lines={state.lines}
+                           points={state.points}
+                           onDeleteClick={onDelete}
+                           onDeleteAll={onDeleteAll}
+                           onChangeVisibility={onChangeVisibility}
+                           onChangeVisibilityAll={onChangeVisibilityAll}
+                           onGoTo={onGoTo}
+                    />
+                </>
+            }
+        </div>
+    );
 }
 
 export default App;

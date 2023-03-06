@@ -12,11 +12,6 @@ export type tState = {
     map: MutableRefObject<mapboxgl.Map | null>,
 
     /**
-     * текущая позиция карты. Думал понадобится, в итоге - нет
-     */
-    currentPosition: tPosition,
-
-    /**
      * аналогично свойству map
      */
     mode: MutableRefObject<tMode> ,

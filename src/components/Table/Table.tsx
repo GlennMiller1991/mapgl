@@ -30,7 +30,7 @@ export const Table: React.FC<tTable> = React.memo((props) => {
     }, [tableState.currentTab])
     const onChangeVisibilityAllClick = useCallback(() => {
         props.onChangeVisibilityAll(tableState.currentTab)
-    }, [])
+    }, [tableState.currentTab])
     return (
         <div className={styles.table}>
             <Header activeTab={tableState.currentTab} onTabClick={onTabClick}/>
